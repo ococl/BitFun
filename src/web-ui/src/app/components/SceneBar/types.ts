@@ -21,6 +21,7 @@ export type SceneTabId =
   | 'insights'
   | 'shell'
   | 'panel-view'
+  | 'externalapps'
   | `miniapp:${string}`
   | `externalapp:${string}`;
 

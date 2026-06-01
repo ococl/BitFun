@@ -13,7 +13,7 @@
 
 import React, { useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, FolderOpen, FolderPlus, History, Check, User, Users, Puzzle, Blocks, ChevronDown, Search } from 'lucide-react';
+import { Plus, FolderOpen, FolderPlus, History, Check, User, Users, Puzzle, Blocks, ChevronDown, Search, Globe } from 'lucide-react';
 import { Tooltip } from '@/component-library';
 import { useApp } from '../../hooks/useApp';
 import { useSceneManager } from '../../hooks/useSceneManager';
@@ -94,6 +94,8 @@ const MainNav: React.FC<MainNavProps> = ({
     () => (typeof activeTabId === 'string' && activeTabId.startsWith('miniapp:') ? activeTabId.slice('miniapp:'.length) : null),
     [activeTabId]
   );
+
+  const isExternalAppsActive = activeTabId === 'externalapps';
 
   // Section expand state
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -668,6 +670,22 @@ const MainNav: React.FC<MainNavProps> = ({
             onOpenMiniApps={() => openScene('miniapps')}
             onOpenMiniApp={(appId) => openScene(`miniapp:${appId}`)}
           />
+          <button
+            type="button"
+            className={[
+              'bitfun-nav-panel__miniapp-entry',
+              isExternalAppsActive && 'is-active',
+            ].filter(Boolean).join(' ')}
+            onClick={() => openScene('externalapps')}
+            aria-label={t('scenes.externalApps')}
+          >
+            <span className="bitfun-nav-panel__miniapp-entry-main">
+              <span className="bitfun-nav-panel__miniapp-entry-copy">
+                <span className="bitfun-nav-panel__miniapp-entry-title">{t('scenes.externalApps')}</span>
+              </span>
+            </span>
+            <Globe size={16} />
+          </button>
         </div>
       </div>
 
