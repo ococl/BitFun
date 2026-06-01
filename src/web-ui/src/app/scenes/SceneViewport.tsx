@@ -33,6 +33,7 @@ const InsightsScene   = lazy(() => import('./my-agent/InsightsScene'));
 const ShellScene      = lazy(() => import('./shell/ShellScene'));
 const WelcomeScene    = lazy(() => import('./welcome/WelcomeScene'));
 const MiniAppScene    = lazy(() => import('./miniapps/MiniAppScene'));
+const ExternalAppScene = lazy(() => import('./externalapps/ExternalAppScene'));
 const PanelViewScene  = lazy(() => import('./panel-view/PanelViewScene'));
 
 
@@ -135,6 +136,9 @@ function renderScene(
     default:
       if (typeof id === 'string' && id.startsWith('miniapp:')) {
         return <MiniAppScene appId={id.slice('miniapp:'.length)} />;
+      }
+      if (typeof id === 'string' && id.startsWith('externalapp:')) {
+        return <ExternalAppScene appId={id.slice('externalapp:'.length)} />;
       }
       return null;
   }
