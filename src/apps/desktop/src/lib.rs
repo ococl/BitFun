@@ -1180,6 +1180,17 @@ pub async fn run() {
             api::miniapp_api::miniapp_ai_chat,
             api::miniapp_api::miniapp_ai_cancel,
             api::miniapp_api::miniapp_ai_list_models,
+            // ExternalApp API
+            api::external_app_api::list_external_apps,
+            api::external_app_api::get_external_app,
+            api::external_app_api::create_external_app,
+            api::external_app_api::update_external_app,
+            api::external_app_api::delete_external_app,
+            api::external_app_api::get_external_app_storage,
+            api::external_app_api::set_external_app_storage,
+            api::external_app_api::clear_external_app_storage_cmd,
+            api::external_app_api::get_external_app_grants,
+            api::external_app_api::set_external_app_grants,
             // Browser API (embedded webview)
             api::browser_api::browser_webview_eval,
             api::browser_api::browser_get_url,

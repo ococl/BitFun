@@ -37,6 +37,7 @@ pub mod snapshot; // Snapshot-based change tracking
 pub mod token_usage; // Token usage tracking
 pub mod workspace; // Workspace management // Diff calculation and merge service
 pub mod workspace_runtime; // Workspace runtime layout / migration / initialization
+pub mod external_app;
 
 // Terminal is implemented in the workspace-level `terminal-core` crate.
 // This re-export preserves the legacy `bitfun_core::service::terminal` path.
