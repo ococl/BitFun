@@ -162,6 +162,15 @@ export const SCENE_TAB_REGISTRY: SceneTabDef[] = [
     singleton: true,
     defaultOpen: false,
   },
+  {
+    id: 'externalapps' as SceneTabId,
+    label: 'External Apps',
+    labelKey: 'scenes.externalApps',
+    Icon: Globe,
+    pinned: false,
+    singleton: true,
+    defaultOpen: false,
+  },
 ];
 
 export function getSceneDef(id: SceneTabId): SceneTabDef | undefined {
