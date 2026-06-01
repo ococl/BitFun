@@ -185,3 +185,18 @@ export function getMiniAppSceneDef(appId: string, appName?: string): SceneTabDef
     defaultOpen: false,
   };
 }
+
+/** Dynamic scene def for an ExternalApp tab (used by SceneBar and useSceneManager). */
+export function getExternalAppSceneDef(appId: string, appName?: string): SceneTabDef {
+  const id: SceneTabId = `externalapp:${appId}`;
+  return {
+    id,
+    label: appName ?? appId,
+    Icon: Globe,
+    pinned: false,
+    fixed: false,
+    closable: true,
+    singleton: false,
+    defaultOpen: false,
+  };
+}

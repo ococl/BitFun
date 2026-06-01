@@ -17,9 +17,10 @@
  */
 
 import { create } from 'zustand';
-import { SCENE_TAB_REGISTRY, MAX_OPEN_SCENES, getSceneDef, getMiniAppSceneDef } from '../scenes/registry';
+import { SCENE_TAB_REGISTRY, MAX_OPEN_SCENES, getSceneDef, getMiniAppSceneDef, getExternalAppSceneDef } from '../scenes/registry';
 import { getSceneNav } from '../scenes/nav-registry';
 import { useNavSceneStore } from './navSceneStore';
+import { useExternalAppStore } from '../scenes/externalapps/stores/externalAppStore';
 import type { SceneTab, SceneTabId } from '../components/SceneBar/types';
 
 const AGENT_SCENE_ID: SceneTabId = 'session';
@@ -31,6 +32,11 @@ function getSceneDefOrMiniapp(id: SceneTabId) {
   if (typeof id === 'string' && id.startsWith('miniapp:')) {
     const appId = (id as string).slice('miniapp:'.length);
     return getMiniAppSceneDef(appId);
+  }
+  if (typeof id === 'string' && id.startsWith('externalapp:')) {
+    const appId = (id as string).slice('externalapp:'.length);
+    const appMeta = useExternalAppStore.getState().apps.find(a => a.id === appId);
+    return getExternalAppSceneDef(appId, appMeta?.name);
   }
   return undefined;
 }
@@ -178,7 +184,8 @@ export const useSceneStore = create<SceneState>((set, get) => ({
 
     const def = getSceneDef(id);
     const isMiniappTab = typeof id === 'string' && id.startsWith('miniapp:');
-    if (!def && !isMiniappTab) return;
+    const isExternalAppTab = typeof id === 'string' && id.startsWith('externalapp:');
+    if (!def && !isMiniappTab && !isExternalAppTab) return;
 
     let next = [...openTabs];
 
