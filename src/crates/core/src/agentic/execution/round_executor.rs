@@ -7,6 +7,7 @@ use super::types::{FinishReason, RoundContext, RoundResult};
 use crate::agentic::core::{Message, ToolCall};
 use crate::agentic::events::{AgenticEvent, EventPriority, EventQueue, ToolEventData};
 use crate::agentic::tools::computer_use_host::ComputerUseHostRef;
+use crate::agentic::tools::external_app_host::ExternalAppHostRef;
 use crate::agentic::tools::pipeline::{ToolExecutionContext, ToolExecutionOptions, ToolPipeline};
 use crate::agentic::tools::registry::get_global_tool_registry;
 use crate::agentic::tools::tool_context_runtime;
@@ -58,6 +59,12 @@ impl RoundExecutor {
         self.tool_pipeline
             .as_ref()
             .and_then(|p| p.computer_use_host())
+    }
+
+    pub fn external_app_host(&self) -> Option<ExternalAppHostRef> {
+        self.tool_pipeline
+            .as_ref()
+            .and_then(|p| p.external_app_host())
     }
 
     /// Execute a single model round
@@ -656,6 +663,7 @@ impl RoundExecutor {
                     &tool_context,
                     Some(format!("round-budget-{}", round_id)),
                     self.computer_use_host(),
+                    self.external_app_host(),
                     CancellationToken::new(),
                 );
 

@@ -34,6 +34,8 @@ impl DeepResearchMode {
                 "ControlHub".to_string(),
                 "TodoWrite".to_string(),
                 "AskUserQuestion".to_string(),
+                "ExternalAppManager".to_string(),
+                "ControlExternalApp".to_string(),
             ],
             tool_exposure_overrides,
         }

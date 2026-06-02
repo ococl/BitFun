@@ -64,12 +64,14 @@ pub(super) async fn save_project_subagent_overrides_local(
     save_project_agent_profiles_document_local(workspace_root, &document).await
 }
 
-pub(super) fn merge_dynamic_mcp_tools(
+pub(super) fn merge_dynamic_tools(
     mut configured_tools: Vec<String>,
     registered_tool_names: &[String],
 ) -> Vec<String> {
+    let before = configured_tools.len();
     for tool_name in registered_tool_names {
-        if !tool_name.starts_with("mcp__") {
+        // Only auto-merge dynamically registered tools (MCP servers and external apps).
+        if !tool_name.starts_with("mcp__") && !tool_name.starts_with("external_app__") {
             continue;
         }
 
@@ -82,6 +84,9 @@ pub(super) fn merge_dynamic_mcp_tools(
 
         configured_tools.push(tool_name.clone());
     }
-
+    let added = configured_tools.len() - before;
+    if added > 0 {
+        log::debug!("merge_dynamic_tools: added {} dynamic tools to allowed list", added);
+    }
     configured_tools
 }

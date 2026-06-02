@@ -52,6 +52,7 @@ impl StaticToolProviderFactory<dyn Tool> for ProductConcreteToolFactory {
             "ReviewPlatform" => Arc::new(ReviewPlatformTool::new()),
             "InitMiniApp" => Arc::new(InitMiniAppTool::new()),
             "ControlExternalApp" => Arc::new(ControlExternalAppTool::new()),
+            "ExternalAppManager" => Arc::new(ExternalAppManagerTool::new()),
             "ControlHub" => Arc::new(ControlHubTool::new()),
             "ComputerUse" => Arc::new(ComputerUseTool::new()),
             "Playbook" => Arc::new(PlaybookTool::new()),

@@ -1,0 +1,16 @@
+# Build output
+dist
+
+# Dependencies
+node_modules
+
+# Logs
+dev.log
+dev.err
+*.log
+
+# Vite cache
+.vite
+
+# Local env files
+*.local

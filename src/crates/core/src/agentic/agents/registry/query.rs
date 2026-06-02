@@ -1,7 +1,7 @@
 use super::availability::resolve_availability;
 use super::support::{
     get_mode_configs, get_subagent_overrides, load_project_subagent_overrides_local,
-    merge_dynamic_mcp_tools,
+    merge_dynamic_tools,
 };
 use super::AgentRegistry;
 use crate::agentic::agents::registry::types::{is_review_agent_entry, AgentEntry};
@@ -48,6 +48,13 @@ impl AgentRegistry {
             AgentCategory::Mode => {
                 let mode_configs = get_mode_configs().await;
                 let registered_tool_names = get_all_registered_tool_names().await;
+                let external_app_registered: Vec<&String> = registered_tool_names.iter().filter(|n| n.starts_with("external_app__")).collect();
+                log::debug!(
+                    "get_agent_tool_policy: agent_type={}, registered_tools={}, external_app_tools={:?}",
+                    agent_type,
+                    registered_tool_names.len(),
+                    external_app_registered
+                );
                 let valid_tools: HashSet<String> = registered_tool_names.iter().cloned().collect();
                 let profile_id = resolve_mode_config_profile_id(agent_type);
                 let resolved_tools = resolve_effective_tools(
@@ -55,12 +62,20 @@ impl AgentRegistry {
                     mode_configs.get(profile_id.as_ref()),
                     &valid_tools,
                 );
-                let allowed_tools = merge_dynamic_mcp_tools(resolved_tools, &registered_tool_names);
+                let allowed_tools = merge_dynamic_tools(resolved_tools, &registered_tool_names);
                 let allowed_tool_set: HashSet<&str> =
                     allowed_tools.iter().map(String::as_str).collect();
                 let mut exposure_overrides = entry.agent.tool_exposure_overrides().clone();
                 exposure_overrides
                     .retain(|tool_name, _| allowed_tool_set.contains(tool_name.as_str()));
+
+                let external_app_allowed: Vec<&String> = allowed_tools.iter().filter(|n| n.starts_with("external_app__")).collect();
+                log::debug!(
+                    "get_agent_tool_policy: agent_type={}, allowed_tools={}, external_app_allowed={:?}",
+                    agent_type,
+                    allowed_tools.len(),
+                    external_app_allowed
+                );
 
                 AgentToolPolicy {
                     allowed_tools,

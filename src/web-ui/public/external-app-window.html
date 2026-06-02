@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>External App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0f0f11; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    iframe { width: 100%; height: 100%; border: none; }
+
+    #loading {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #888; font-size: 14px; background: #0f0f11; z-index: 10;
+    }
+    #error {
+      position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; color: #e6e6e6; font-size: 14px; background: #0f0f11; z-index: 10; padding: 24px; text-align: center;
+    }
+    #error button {
+      padding: 8px 18px; border-radius: 6px; border: none; background: #2563eb; color: #fff; font-size: 13px; cursor: pointer;
+    }
+
+    body.light { background: #f5f5f7; }
+    body.light #loading,
+    body.light #error { background: #f5f5f7; color: #555; }
+    body.light #error { color: #1f1f1f; }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading external app...</div>
+  <div id="error">
+    <p id="error-text">Failed to load</p>
+    <button onclick="location.reload()">重试</button>
+  </div>
+  <iframe id="app-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" style="display:none;"></iframe>
+
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const appId = params.get('appId') || '';
+      const url = params.get('url') || '';
+      let theme = params.get('theme') || 'dark';
+      let locale = params.get('locale') || 'en';
+      if (theme === 'light') document.body.classList.add('light');
+
+      const frame = document.getElementById('app-frame');
+      const loading = document.getElementById('loading');
+      const errorPanel = document.getElementById('error');
+      const errorText = document.getElementById('error-text');
+
+      if (!url || !appId) {
+        showError('Missing appId or url parameter');
+        return;
+      }
+
+      function showError(msg) {
+        loading.style.display = 'none';
+        errorText.textContent = msg;
+        errorPanel.style.display = 'flex';
+      }
+
+      async function invoke(cmd, args) {
+        if (!window.__TAURI__?.core?.invoke) throw new Error('Tauri API not available');
+        return window.__TAURI__.core.invoke(cmd, args);
+      }
+
+      let grantedCapabilities = new Set();
+
+      async function init() {
+        try {
+          const storedGrants = await invoke('get_external_app_grants', { appId });
+          grantedCapabilities = new Set(Array.isArray(storedGrants) ? storedGrants : []);
+          loadIframe();
+        } catch (e) {
+          showError('初始化失败: ' + e);
+        }
+      }
+
+      function loadIframe() {
+        loading.style.display = 'none';
+        frame.style.display = 'block';
+        frame.src = url;
+        frame.onload = function() {
+          sendEvent('themeChange', { theme });
+          sendEvent('localeChange', { locale });
+        };
+      }
+
+      function sendEvent(event, payload) {
+        frame.contentWindow?.postMessage({ type: 'bitfun:event', event, payload }, '*');
+      }
+
+      function reply(id, result) {
+        frame.contentWindow?.postMessage({ jsonrpc: '2.0', id, result }, '*');
+      }
+
+      function replyError(id, message) {
+        frame.contentWindow?.postMessage({ jsonrpc: '2.0', id, error: { code: -32000, message } }, '*');
+      }
+
+      const ALLOWED_METHODS = new Set([
+        'storage.get', 'storage.set',
+        'ai.complete', 'ai.chat', 'ai.cancel', 'ai.getModels',
+        'dialog.open', 'dialog.save', 'dialog.message',
+        'clipboard.writeText', 'clipboard.readText',
+        'bitfun/request-theme', 'bitfun/request-locale',
+      ]);
+
+      window.addEventListener('message', async function(event) {
+        if (!frame || event.source !== frame.contentWindow) return;
+        const msg = event.data;
+        if (!msg || typeof msg !== 'object' || !msg.method) return;
+
+        const { id, method, params = {} } = msg;
+        const ns = method.split(/[./]/)[0];
+
+        if (ns !== 'bitfun' && !grantedCapabilities.has(ns)) {
+          replyError(id, 'capability not granted: ' + ns);
+          return;
+        }
+        if (!ALLOWED_METHODS.has(method)) {
+          replyError(id, 'method not allowed: ' + method);
+          return;
+        }
+
+        if (method === 'bitfun/request-theme') {
+          reply(id, { theme });
+          return;
+        }
+        if (method === 'bitfun/request-locale') {
+          reply(id, { locale });
+          return;
+        }
+
+        try {
+          switch (method) {
+            case 'storage.get': {
+              const value = await invoke('get_external_app_storage', { appId, key: String(params.key ?? '') });
+              reply(id, value);
+              return;
+            }
+            case 'storage.set': {
+              await invoke('set_external_app_storage', { appId, key: String(params.key ?? ''), value: params.value });
+              reply(id, null);
+              return;
+            }
+            case 'ai.complete': {
+              const result = await invoke('external_app_ai_complete', {
+                request: {
+                  appId,
+                  prompt: String(params.prompt ?? ''),
+                  systemPrompt: params.systemPrompt,
+                  model: params.model,
+                  maxTokens: params.maxTokens,
+                  temperature: params.temperature,
+                }
+              });
+              reply(id, result);
+              return;
+            }
+            case 'ai.chat': {
+              const result = await invoke('external_app_ai_chat', {
+                request: {
+                  appId,
+                  messages: params.messages ?? [],
+                  streamId: String(params.streamId ?? ''),
+                  systemPrompt: params.systemPrompt,
+                  model: params.model,
+                  maxTokens: params.maxTokens,
+                  temperature: params.temperature,
+                }
+              });
+              reply(id, result);
+              return;
+            }
+            case 'ai.cancel': {
+              await invoke('external_app_ai_cancel', { request: { appId, streamId: String(params.streamId ?? '') } });
+              reply(id, null);
+              return;
+            }
+            case 'ai.getModels': {
+              const models = await invoke('external_app_ai_list_models', { request: { appId } });
+              reply(id, models);
+              return;
+            }
+            case 'dialog.open': {
+              const path = await invoke('plugin:dialog|open', { options: params });
+              reply(id, path);
+              return;
+            }
+            case 'dialog.save': {
+              const path = await invoke('plugin:dialog|save', { options: params });
+              reply(id, path);
+              return;
+            }
+            case 'dialog.message': {
+              const ok = await invoke('plugin:dialog|message', {
+                message: String(params.message ?? ''),
+                title: params.title ? String(params.title) : undefined,
+                kind: params.kind,
+                okButtonLabel: params.okLabel ? String(params.okLabel) : undefined,
+              });
+              reply(id, ok);
+              return;
+            }
+            case 'clipboard.writeText': {
+              await navigator.clipboard.writeText(String(params.text ?? ''));
+              reply(id, null);
+              return;
+            }
+            case 'clipboard.readText': {
+              const text = await navigator.clipboard.readText();
+              reply(id, text);
+              return;
+            }
+            default:
+              replyError(id, 'unhandled method: ' + method);
+          }
+        } catch (err) {
+          replyError(id, String(err));
+        }
+      });
+
+      // ─── Tool call polling bridge ───
+      let toolCallIdCounter = 0;
+      const pendingToolCalls = new Map(); // jsonrpc id -> { callId, timer }
+      const processingCallIds = new Set(); // callIds currently being executed
+
+      async function pollToolCalls() {
+        try {
+          const call = await invoke('poll_external_app_tool_call', { appId });
+          if (!call) return;
+          // Skip if this callId is already being processed
+          if (processingCallIds.has(call.callId)) return;
+
+          processingCallIds.add(call.callId);
+          const id = ++toolCallIdCounter;
+
+          // Set a client-side safety timeout (25s, under the Rust 30s timeout)
+          const timer = setTimeout(() => {
+            pendingToolCalls.delete(id);
+            processingCallIds.delete(call.callId);
+            invoke('submit_external_app_tool_result', {
+              payload: { callId: call.callId, success: false, error: 'Tool call timed out in iframe bridge' }
+            }).catch(() => {});
+          }, 25000);
+
+          pendingToolCalls.set(id, { callId: call.callId, timer });
+
+          frame.contentWindow?.postMessage({
+            jsonrpc: '2.0',
+            id: id,
+            method: 'tool.call',
+            params: { callId: call.callId, command: call.command, params: call.params }
+          }, '*');
+        } catch (e) {
+          console.error('poll tool call error:', e);
+        }
+      }
+
+      // Handle tool.call responses from iframe
+      window.addEventListener('message', function(event) {
+        if (event.source !== frame.contentWindow) return;
+        const msg = event.data;
+        if (!msg || typeof msg !== 'object' || !msg.jsonrpc || typeof msg.id !== 'number') return;
+        if (msg.method) return; // It's a request, not a response
+
+        const pending = pendingToolCalls.get(msg.id);
+        if (!pending) return;
+        pendingToolCalls.delete(msg.id);
+        clearTimeout(pending.timer);
+        processingCallIds.delete(pending.callId);
+
+        if (msg.error) {
+          invoke('submit_external_app_tool_result', {
+            payload: { callId: pending.callId, success: false, error: msg.error.message || 'Unknown error' }
+          }).catch(() => {});
+        } else {
+          // msg.result from iframe is already { success: true, data: ... }
+          invoke('submit_external_app_tool_result', {
+            payload: { callId: pending.callId, success: true, data: msg.result }
+          }).catch(() => {});
+        }
+      });
+
+      // Start polling after iframe loads
+      let pollInterval = null;
+      frame.addEventListener('load', () => {
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(pollToolCalls, 500);
+      });
+
+      // Listen to theme/locale changes from the main window
+      if (window.__TAURI__?.event?.listen) {
+        window.__TAURI__.event.listen('bitfun:theme-change', (event) => {
+          theme = event.payload.theme;
+          document.body.classList.toggle('light', theme === 'light');
+          sendEvent('themeChange', { theme });
+        });
+        window.__TAURI__.event.listen('bitfun:locale-change', (event) => {
+          locale = event.payload.locale;
+          sendEvent('localeChange', { locale });
+        });
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

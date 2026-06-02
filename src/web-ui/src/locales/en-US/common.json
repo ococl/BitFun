@@ -83,6 +83,7 @@
       "terminal": "Shell",
       "git": "Git",
       "miniApps": "Mini App",
+      "externalApps": "External App",
       "insights": "Insights"
     },
     "tooltips": {
@@ -891,6 +892,7 @@
     "agents": "Agents",
     "skills": "Skills",
     "miniApps": "Mini App",
+    "externalApps": "External App",
     "browser": "Browser",
     "insights": "Insights",
     "assistant": "Assistant",
