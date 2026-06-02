@@ -383,6 +383,7 @@ Use the remote project skill.
             unlocked_collapsed_tools: Vec::new(),
             custom_data: Default::default(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: Default::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::new(
                 Some(WorkspaceServices {
@@ -424,6 +425,7 @@ Use the remote project skill.
             unlocked_collapsed_tools: Vec::new(),
             custom_data: Default::default(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: Default::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::new(
                 Some(WorkspaceServices {

@@ -128,6 +128,9 @@ pub struct CreateExternalAppRequest {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    pub version: String,
+    #[serde(default)]
+    pub commands: Vec<super::models::ManifestCommand>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -140,6 +143,10 @@ pub struct UpdateExternalAppRequest {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub commands: Option<Vec<super::models::ManifestCommand>>,
 }
 
 /// ExternalApp service — CRUD, storage, and grants.
@@ -183,7 +190,9 @@ impl ExternalAppService {
             description: request.description.unwrap_or_default(),
             icon: request.icon.unwrap_or_else(|| "globe".to_string()),
             url: request.url,
+            version: request.version,
             business_domains: Vec::new(),
+            commands: request.commands,
             created_at: now,
             updated_at: now,
         };
@@ -216,6 +225,12 @@ impl ExternalAppService {
         }
         if let Some(description) = request.description {
             app.description = description;
+        }
+        if let Some(version) = request.version {
+            app.version = version;
+        }
+        if let Some(commands) = request.commands {
+            app.commands = commands;
         }
         app.updated_at = now_secs();
         let cloned = app.clone();
@@ -290,6 +305,8 @@ mod tests {
             url: "https://test.com".to_string(),
             icon: None,
             description: None,
+            version: "1.0.0".to_string(),
+            commands: vec![],
         };
         assert_eq!(req.name, "Test");
     }

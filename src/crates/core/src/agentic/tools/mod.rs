@@ -4,6 +4,7 @@ pub mod browser_control;
 pub mod computer_use_capability;
 pub mod computer_use_host;
 pub mod computer_use_optimizer;
+pub mod external_app_host;
 pub mod computer_use_verification;
 pub mod file_read_state_runtime;
 pub mod file_tool_guidance;

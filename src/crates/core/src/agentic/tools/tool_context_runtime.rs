@@ -9,6 +9,7 @@ use crate::agentic::coordination::get_global_coordinator;
 use crate::agentic::deep_review::tool_context;
 use crate::agentic::session::EvidenceLedgerCheckpoint;
 use crate::agentic::tools::computer_use_host::ComputerUseHostRef;
+use crate::agentic::tools::external_app_host::ExternalAppHostRef;
 use crate::agentic::tools::framework::{
     build_tool_path_policy_denial_message, build_tool_runtime_artifact_reference,
     build_tool_session_runtime_artifact_reference, is_tool_path_allowed_by_resolved_roots,
@@ -54,6 +55,8 @@ pub struct ToolUseContext {
     pub custom_data: HashMap<String, Value>,
     /// Desktop automation (Computer use); only set in BitFun desktop.
     pub computer_use_host: Option<crate::agentic::tools::computer_use_host::ComputerUseHostRef>,
+    /// External app window lifecycle host; only set in BitFun desktop.
+    pub external_app_host: Option<ExternalAppHostRef>,
     pub runtime_tool_restrictions: ToolRuntimeRestrictions,
     /// Runtime handles such as workspace I/O services and cancellation.
     pub runtime_handles: ToolRuntimeHandles,
@@ -145,6 +148,7 @@ impl ToolUseContext {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: ToolRuntimeHandles::new(workspace_services, None),
         }
@@ -702,6 +706,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -718,6 +723,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: vec!["WebFetch".to_string()],
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions {
                 allowed_tool_names: BTreeSet::from(["Read".to_string()]),
                 denied_tool_names: BTreeSet::from(["Bash".to_string()]),
@@ -762,6 +768,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: vec!["WebFetch".to_string(), "Git".to_string()],
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions {
                 allowed_tool_names: BTreeSet::from(["Read".to_string(), "GetToolSpec".to_string()]),
                 denied_tool_names: BTreeSet::from(["Bash".to_string()]),
@@ -823,6 +830,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };
@@ -874,6 +882,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -897,6 +906,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -922,6 +932,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -1127,6 +1138,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::new(
                 None,
@@ -1163,6 +1175,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };
@@ -1203,6 +1216,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };

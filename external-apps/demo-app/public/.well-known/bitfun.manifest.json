@@ -1,0 +1,67 @@
+{
+  "$schema": "https://bitfun.dev/schemas/bitfun-manifest-v1.json",
+  "name": "BitFun Demo App",
+  "description": "BitFun 外部应用演示程序，展示 SDK 桥接、AI 调用、存储、对话框、剪贴板、命令响应等全部能力。",
+  "version": "1.0.0",
+  "capabilities": {
+    "ai": {
+      "enabled": true,
+      "required": true,
+      "description": "允许调用 AI 对话和补全能力"
+    },
+    "storage": {
+      "enabled": true,
+      "required": true,
+      "description": "允许读写隔离存储"
+    },
+    "dialog": {
+      "enabled": true,
+      "required": true,
+      "description": "允许打开系统文件对话框"
+    },
+    "clipboard": {
+      "enabled": true,
+      "required": true,
+      "description": "允许读写系统剪贴板"
+    },
+    "network": {
+      "enabled": true,
+      "description": "允许访问外部网络接口"
+    },
+    "notification": {
+      "enabled": true,
+      "description": "允许发送桌面通知"
+    }
+  },
+  "commands": [
+    {
+      "name": "setFilter",
+      "description": "设置任务列表的筛选条件",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "timeRange": { "type": "string", "enum": ["today", "week", "month", "all"] }
+        }
+      }
+    },
+    {
+      "name": "highlightItem",
+      "description": "高亮任务列表中指定索引的条目",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "index": { "type": "number" }
+        }
+      }
+    }
+  ],
+  "stateSchema": {
+    "type": "object",
+    "properties": {
+      "currentFilter": { "type": "string" },
+      "itemCount": { "type": "number" },
+      "lastAction": { "type": "string" }
+    }
+  },
+  "businessDomains": ["https://api.example.com"]
+}

@@ -167,6 +167,7 @@ const PRODUCT_TOOL_PROVIDER_GROUP_PLAN: &[ToolProviderGroupPlan] = &[
             "ReviewPlatform",
             "InitMiniApp",
             "ControlExternalApp",
+            "ExternalAppManager",
             "ControlHub",
             "ComputerUse",
             "Playbook",

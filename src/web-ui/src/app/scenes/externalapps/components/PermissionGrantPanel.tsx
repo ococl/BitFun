@@ -1,5 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import {
+  Brain, Database, FolderOpen, ClipboardCheck, Globe, Bell,
+  Check, X, ShieldCheck, AlertCircle,
+} from 'lucide-react';
 import type { ManifestCapabilities } from '../types/externalApp';
+import './PermissionGrantPanel.scss';
 
 interface PermissionGrantPanelProps {
   appName: string;
@@ -9,27 +14,38 @@ interface PermissionGrantPanelProps {
   onDeny: () => void;
 }
 
-const CAPABILITY_LABELS: Record<string, string> = {
-  ai: 'AI 对话与补全',
-  storage: '隔离存储读写',
-  dialog: '系统文件对话框',
-  clipboard: '剪贴板访问',
+const CAPABILITY_META: Record<string, { label: string; icon: React.ReactNode }> = {
+  ai: { label: 'AI 对话与补全', icon: <Brain size={20} /> },
+  storage: { label: '隔离存储读写', icon: <Database size={20} /> },
+  dialog: { label: '系统文件对话框', icon: <FolderOpen size={20} /> },
+  clipboard: { label: '剪贴板访问', icon: <ClipboardCheck size={20} /> },
+  network: { label: '外部网络请求', icon: <Globe size={20} /> },
+  notification: { label: '桌面通知', icon: <Bell size={20} /> },
 };
 
 const PermissionGrantPanel: React.FC<PermissionGrantPanelProps> = ({
   appName, manifest, currentGrants, onConfirm, onDeny,
 }) => {
   const capabilities = useMemo(() => {
-    const caps: { key: string; label: string; description?: string; enabled: boolean }[] = [];
+    const caps: { key: string; label: string; description?: string; icon: React.ReactNode; required: boolean }[] = [];
     const c = manifest.capabilities;
-    if (c.ai?.enabled) caps.push({ key: 'ai', label: CAPABILITY_LABELS.ai, description: c.ai.description, enabled: true });
-    if (c.storage?.enabled) caps.push({ key: 'storage', label: CAPABILITY_LABELS.storage, description: c.storage.description, enabled: true });
-    if (c.dialog?.enabled) caps.push({ key: 'dialog', label: CAPABILITY_LABELS.dialog, description: c.dialog.description, enabled: true });
-    if (c.clipboard?.enabled) caps.push({ key: 'clipboard', label: CAPABILITY_LABELS.clipboard, description: c.clipboard.description, enabled: true });
+    const add = (key: string) => {
+      const item = c[key as keyof typeof c];
+      if (!item?.enabled) return;
+      const meta = CAPABILITY_META[key] ?? { label: key, icon: <ShieldCheck size={20} /> };
+      caps.push({ key, label: meta.label, description: item.description, icon: meta.icon, required: item.required ?? false });
+    };
+    add('ai');
+    add('storage');
+    add('dialog');
+    add('clipboard');
+    add('network');
+    add('notification');
     return caps;
   }, [manifest]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set(currentGrants));
+  const [showError, setShowError] = useState(false);
 
   const toggle = (key: string) => {
     setSelected((prev) => {
@@ -37,29 +53,116 @@ const PermissionGrantPanel: React.FC<PermissionGrantPanelProps> = ({
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+    setShowError(false);
+  };
+
+  const allKeys = capabilities.map((c) => c.key);
+  const allSelected = allKeys.length > 0 && allKeys.every((k) => selected.has(k));
+  const noneSelected = allKeys.every((k) => !selected.has(k));
+
+  const requiredKeys = useMemo(() => capabilities.filter((c) => c.required).map((c) => c.key), [capabilities]);
+  const requiredMet = requiredKeys.every((k) => selected.has(k));
+  const hasRequired = requiredKeys.length > 0;
+  const canConfirm = !hasRequired || requiredMet;
+
+  const handleConfirm = () => {
+    if (!canConfirm) {
+      setShowError(true);
+      return;
+    }
+    onConfirm(Array.from(selected));
   };
 
   if (capabilities.length === 0) return null;
 
   return (
-    <div className="external-app-permission-panel">
-      <h3>{appName} 请求权限</h3>
-      <ul className="permission-list">
-        {capabilities.map((cap) => (
-          <li key={cap.key}>
-            <label>
-              <input type="checkbox" checked={selected.has(cap.key)} onChange={() => toggle(cap.key)} />
-              <span>{cap.label}</span>
-            </label>
-            {cap.description && <span className="desc">{cap.description}</span>}
-          </li>
-        ))}
-      </ul>
-      <div className="actions">
-        <button onClick={() => setSelected(new Set(capabilities.map((c) => c.key)))}>全选</button>
-        <button onClick={() => setSelected(new Set())}>全不选</button>
-        <button onClick={() => onConfirm(Array.from(selected))}>确认授权</button>
-        <button onClick={onDeny}>拒绝</button>
+    <div className="permission-panel">
+      <div className="permission-panel__header">
+        <div className="permission-panel__icon">
+          <ShieldCheck size={32} strokeWidth={1.5} />
+        </div>
+        <h3 className="permission-panel__title">{appName}</h3>
+        <p className="permission-panel__subtitle">请求访问以下权限</p>
+      </div>
+
+      <div className="permission-panel__list">
+        {capabilities.map((cap) => {
+          const isSelected = selected.has(cap.key);
+          return (
+            <button
+              key={cap.key}
+              type="button"
+              className={[
+                'permission-panel__item',
+                isSelected && 'permission-panel__item--selected',
+              ].filter(Boolean).join(' ')}
+              onClick={() => toggle(cap.key)}
+              aria-pressed={isSelected}
+            >
+              <div className="permission-panel__item-icon">{cap.icon}</div>
+              <div className="permission-panel__item-body">
+                <div className="permission-panel__item-label">
+                  {cap.label}
+                  {cap.required && <span className="permission-panel__required-tag">必需</span>}
+                </div>
+                {cap.description ? (
+                  <div className="permission-panel__item-desc">{cap.description}</div>
+                ) : null}
+              </div>
+              <div className="permission-panel__item-check">
+                {isSelected ? <Check size={14} strokeWidth={3} /> : null}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="permission-panel__bulk">
+        <button
+          type="button"
+          className={[
+            'permission-panel__bulk-btn',
+            allSelected && 'permission-panel__bulk-btn--active',
+          ].filter(Boolean).join(' ')}
+          onClick={() => { setSelected(new Set(allKeys)); setShowError(false); }}
+          disabled={allSelected}
+        >
+          全选
+        </button>
+        <button
+          type="button"
+          className={[
+            'permission-panel__bulk-btn',
+            noneSelected && 'permission-panel__bulk-btn--active',
+          ].filter(Boolean).join(' ')}
+          onClick={() => { setSelected(new Set()); setShowError(false); }}
+          disabled={noneSelected}
+        >
+          全不选
+        </button>
+      </div>
+
+      {showError && hasRequired && !requiredMet && (
+        <div className="permission-panel__error">
+          <AlertCircle size={14} />
+          请勾选所有标记为"必需"的权限
+        </div>
+      )}
+
+      <div className="permission-panel__actions">
+        <button type="button" className="permission-panel__btn permission-panel__btn--secondary" onClick={onDeny}>
+          <X size={14} />
+          拒绝
+        </button>
+        <button
+          type="button"
+          className="permission-panel__btn permission-panel__btn--primary"
+          onClick={handleConfirm}
+          disabled={!canConfirm}
+        >
+          <Check size={14} />
+          确认授权
+        </button>
       </div>
     </div>
   );

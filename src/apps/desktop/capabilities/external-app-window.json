@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "external-app-window",
+  "description": "Minimal permissions for external app standalone windows",
+  "windows": ["external-app-*"],
+  "webviews": ["external-app-*"],
+  "local": true,
+  "remote": {
+    "urls": ["https://*", "https://*:*", "http://*", "http://*:*"]
+  },
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:webview:default",
+    "dialog:default"
+  ]
+}
