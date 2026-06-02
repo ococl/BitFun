@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, RefObject, useCallback, useEffect } from 'react';
 import { externalAppAPI } from '@/infrastructure/api/service-api/ExternalAppAPI';
+import { api } from '@/infrastructure/api/service-api/ApiClient';
 import { open as dialogOpen, save as dialogSave, message as dialogMessage } from '@tauri-apps/plugin-dialog';
 import { useTheme } from '@/infrastructure/theme/hooks/useTheme';
 import { useI18n } from '@/infrastructure/i18n';
@@ -24,6 +25,7 @@ const ALLOWED_METHODS = new Set([
   'ai.complete', 'ai.chat', 'ai.cancel', 'ai.getModels',
   'dialog.open', 'dialog.save', 'dialog.message',
   'clipboard.writeText', 'clipboard.readText',
+  'notification.send',
   'bitfun/request-theme', 'bitfun/request-locale',
 ]);
 
@@ -179,6 +181,17 @@ export function useExternalAppBridge(
           case 'clipboard.readText': {
             const text = await navigator.clipboard.readText();
             reply(text);
+            return;
+          }
+          case 'notification.send': {
+            await api.invoke('send_external_app_notification', {
+              request: {
+                app_id: appId,
+                title: String(params.title ?? ''),
+                body: params.body ? String(params.body) : undefined,
+              },
+            });
+            reply(null);
             return;
           }
           default:
