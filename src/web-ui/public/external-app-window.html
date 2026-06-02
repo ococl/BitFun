@@ -217,9 +217,11 @@
             }
             case 'notification.send': {
               await invoke('send_external_app_notification', {
-                appId,
-                title: String(params.title ?? ''),
-                body: params.body ? String(params.body) : undefined,
+                request: {
+                  app_id: appId,
+                  title: String(params.title ?? ''),
+                  body: params.body ? String(params.body) : undefined,
+                }
               });
               reply(id, null);
               return;
