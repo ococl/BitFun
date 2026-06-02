@@ -43,6 +43,7 @@ src/web-ui/public/version.json
 apps/desktop/gen/
 src/apps/desktop/gen/
 src-tauri/gen/
+BitFun-Installer/src-tauri/gen/
 
 # Updater signing private key (never commit; pubkey is in tauri.conf.json)
 src/apps/desktop/.tauri/*.key
@@ -70,5 +71,9 @@ tests/e2e/reports/
 .worktrees/
 
 ASSETS_LICENSES.md
+
+# AI-generated temporary design docs (kept locally but not committed)
+docs/superpowers/plans/
+docs/superpowers/specs/
 
 external/

@@ -8,6 +8,7 @@ use super::types::*;
 use crate::agentic::core::{ToolCall, ToolExecutionState, ToolResult as ModelToolResult};
 use crate::agentic::events::types::ToolEventData;
 use crate::agentic::tools::computer_use_host::ComputerUseHostRef;
+use crate::agentic::tools::external_app_host::ExternalAppHostRef;
 use crate::agentic::tools::framework::ToolResult as FrameworkToolResult;
 use crate::agentic::tools::registry::ToolRegistry;
 use crate::agentic::tools::tool_context_runtime;
@@ -267,6 +268,7 @@ pub struct ToolPipeline {
     /// "same tool with deep-equal arguments" can be recognized across rounds.
     recent_tool_calls: Arc<DashMap<String, ToolCallLoopHistory>>,
     computer_use_host: Option<ComputerUseHostRef>,
+    external_app_host: std::sync::Mutex<Option<ExternalAppHostRef>>,
 }
 
 impl ToolPipeline {
@@ -274,6 +276,7 @@ impl ToolPipeline {
         tool_registry: Arc<TokioRwLock<ToolRegistry>>,
         state_manager: Arc<ToolStateManager>,
         computer_use_host: Option<ComputerUseHostRef>,
+        external_app_host: Option<ExternalAppHostRef>,
     ) -> Self {
         Self {
             tool_registry,
@@ -282,6 +285,7 @@ impl ToolPipeline {
             cancellation_tokens: Arc::new(DashMap::new()),
             recent_tool_calls: Arc::new(DashMap::new()),
             computer_use_host,
+            external_app_host: std::sync::Mutex::new(external_app_host),
         }
     }
 
@@ -307,6 +311,14 @@ impl ToolPipeline {
 
     pub fn computer_use_host(&self) -> Option<ComputerUseHostRef> {
         self.computer_use_host.clone()
+    }
+
+    pub fn external_app_host(&self) -> Option<ExternalAppHostRef> {
+        self.external_app_host.lock().unwrap().clone()
+    }
+
+    pub fn set_external_app_host(&self, host: Option<ExternalAppHostRef>) {
+        *self.external_app_host.lock().unwrap() = host;
     }
 
     fn should_interrupt_for_steering(&self, context: &ToolExecutionContext) -> bool {
@@ -1133,6 +1145,7 @@ impl ToolPipeline {
         tool_context_runtime::build_tool_use_context_for_task(
             task,
             self.computer_use_host.clone(),
+            self.external_app_host.lock().unwrap().clone(),
             cancellation_token,
         )
     }
@@ -1383,7 +1396,7 @@ mod tests {
         let registry = Arc::new(TokioRwLock::new(ToolRegistry::new()));
         let event_queue = Arc::new(EventQueue::new(EventQueueConfig::default()));
         let state_manager = Arc::new(ToolStateManager::new(event_queue));
-        ToolPipeline::new(registry, state_manager, None)
+        ToolPipeline::new(registry, state_manager, None, None)
     }
 
     fn test_tool_call(tool_id: &str, tool_name: &str) -> ToolCall {

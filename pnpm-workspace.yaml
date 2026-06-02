@@ -3,3 +3,4 @@ packages:
   - "src/mobile-web"
   - "BitFun-Installer"
   - "tests/e2e"
+  - "external-apps/*"

@@ -383,6 +383,7 @@ Use the remote project skill.
             unlocked_collapsed_tools: Vec::new(),
             custom_data: Default::default(),
             computer_use_host: None,
+            external_app_host: None,
             cancellation_token: None,
             runtime_tool_restrictions: Default::default(),
             workspace_services: Some(WorkspaceServices {
@@ -422,6 +423,7 @@ Use the remote project skill.
             unlocked_collapsed_tools: Vec::new(),
             custom_data: Default::default(),
             computer_use_host: None,
+            external_app_host: None,
             cancellation_token: None,
             runtime_tool_restrictions: Default::default(),
             workspace_services: Some(WorkspaceServices {

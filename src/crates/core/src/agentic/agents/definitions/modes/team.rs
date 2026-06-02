@@ -37,6 +37,8 @@ impl TeamMode {
                 "TerminalControl".to_string(),
                 "ControlHub".to_string(),
                 "GetFileDiff".to_string(),
+                "ExternalAppManager".to_string(),
+                "ControlExternalApp".to_string(),
             ],
         }
     }

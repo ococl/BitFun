@@ -408,6 +408,7 @@ mod tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             cancellation_token: None,
             runtime_tool_restrictions: Default::default(),
             workspace_services: None,

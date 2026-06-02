@@ -1,0 +1,19 @@
+{
+  "name": "BitFun Demo App",
+  "short_name": "DemoApp",
+  "description": "BitFun external app demonstration with offline support",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f11",
+  "theme_color": "#0f0f11",
+  "orientation": "any",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+@use '../../../component-library/styles/tokens' as *;
+
+.external-app-gallery {
+  .gallery-page-header__actions {
+    > :first-child {
+      width: 180px;
+    }
+  }
+}
+
+.external-app-auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $size-gap-5;
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .permission-panel {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .external-app-gallery {
+    .gallery-page-header__actions {
+      > :first-child {
+        width: 100%;
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ export interface ExternalAppMeta {
   description: string;
   icon: string;
   url: string;
+  version: string;
   business_domains: string[];
   created_at: number;
   updated_at: number;
@@ -11,6 +12,7 @@ export interface ExternalAppMeta {
 
 export interface ManifestCapabilityItem {
   enabled: boolean;
+  required?: boolean;
   allowedModels?: string[];
   description?: string;
 }
@@ -20,6 +22,8 @@ export interface ManifestCapabilitySet {
   storage?: ManifestCapabilityItem;
   dialog?: ManifestCapabilityItem;
   clipboard?: ManifestCapabilityItem;
+  network?: ManifestCapabilityItem;
+  notification?: ManifestCapabilityItem;
 }
 
 export interface ManifestCommand {
@@ -37,7 +41,7 @@ export interface ManifestCapabilities {
 }
 
 export interface CreateExternalAppRequest {
-  name: string;
+  name?: string;
   url: string;
   icon?: string;
   description?: string;
@@ -53,4 +57,23 @@ export interface UpdateExternalAppRequest {
 export interface ExternalAppStateCacheEntry {
   state: Record<string, unknown>;
   timestamp: number;
+}
+
+export interface AiCompleteOptions {
+  systemPrompt?: string;
+  model?: string;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AiChatOptions {
+  systemPrompt?: string;
+  model?: string;
+  maxTokens?: number;
+  temperature?: number;
 }
