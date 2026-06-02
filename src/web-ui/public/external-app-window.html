@@ -104,6 +104,7 @@
         'ai.complete', 'ai.chat', 'ai.cancel', 'ai.getModels',
         'dialog.open', 'dialog.save', 'dialog.message',
         'clipboard.writeText', 'clipboard.readText',
+        'notification.send',
         'bitfun/request-theme', 'bitfun/request-locale',
       ]);
 
@@ -214,6 +215,15 @@
               reply(id, text);
               return;
             }
+            case 'notification.send': {
+              await invoke('send_external_app_notification', {
+                appId,
+                title: String(params.title ?? ''),
+                body: params.body ? String(params.body) : undefined,
+              });
+              reply(id, null);
+              return;
+            }
             default:
               replyError(id, 'unhandled method: ' + method);
           }
@@ -222,38 +232,44 @@
         }
       });
 
-      // ─── Tool call polling bridge ───
+      // ─── Tool call bridge (event-driven with one-time poll fallback) ───
       let toolCallIdCounter = 0;
       const pendingToolCalls = new Map(); // jsonrpc id -> { callId, timer }
       const processingCallIds = new Set(); // callIds currently being executed
 
-      async function pollToolCalls() {
+      function forwardToolCall(call) {
+        // Skip if this callId is already being processed
+        if (processingCallIds.has(call.callId)) return;
+        processingCallIds.add(call.callId);
+        const id = ++toolCallIdCounter;
+
+        // Set a client-side safety timeout (25s, under the Rust 30s timeout)
+        const timer = setTimeout(() => {
+          pendingToolCalls.delete(id);
+          processingCallIds.delete(call.callId);
+          invoke('submit_external_app_tool_result', {
+            payload: { callId: call.callId, success: false, error: 'Tool call timed out in iframe bridge' }
+          }).catch(() => {});
+        }, 25000);
+
+        pendingToolCalls.set(id, { callId: call.callId, timer });
+
+        frame.contentWindow?.postMessage({
+          jsonrpc: '2.0',
+          id: id,
+          method: 'tool.call',
+          params: { callId: call.callId, command: call.command, params: call.params }
+        }, '*');
+      }
+
+      async function pollToolCallsOnce() {
         try {
-          const call = await invoke('poll_external_app_tool_call', { appId });
-          if (!call) return;
-          // Skip if this callId is already being processed
-          if (processingCallIds.has(call.callId)) return;
-
-          processingCallIds.add(call.callId);
-          const id = ++toolCallIdCounter;
-
-          // Set a client-side safety timeout (25s, under the Rust 30s timeout)
-          const timer = setTimeout(() => {
-            pendingToolCalls.delete(id);
-            processingCallIds.delete(call.callId);
-            invoke('submit_external_app_tool_result', {
-              payload: { callId: call.callId, success: false, error: 'Tool call timed out in iframe bridge' }
-            }).catch(() => {});
-          }, 25000);
-
-          pendingToolCalls.set(id, { callId: call.callId, timer });
-
-          frame.contentWindow?.postMessage({
-            jsonrpc: '2.0',
-            id: id,
-            method: 'tool.call',
-            params: { callId: call.callId, command: call.command, params: call.params }
-          }, '*');
+          let call;
+          // Drain any queued commands that arrived before the event listener was ready
+          while ((call = await invoke('poll_external_app_tool_call', { appId }))) {
+            if (processingCallIds.has(call.callId)) break; // safety: avoid infinite loop
+            forwardToolCall(call);
+          }
         } catch (e) {
           console.error('poll tool call error:', e);
         }
@@ -284,11 +300,18 @@
         }
       });
 
-      // Start polling after iframe loads
-      let pollInterval = null;
+      // Listen for push events from Rust (primary path — no polling)
+      if (window.__TAURI__?.event?.listen) {
+        window.__TAURI__.event.listen('bitfun:external-app-command', (event) => {
+          const payload = event.payload;
+          if (!payload || !payload.callId) return;
+          forwardToolCall(payload);
+        });
+      }
+
+      // One-time poll on iframe load to catch commands that arrived before listener was ready
       frame.addEventListener('load', () => {
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(pollToolCalls, 500);
+        pollToolCallsOnce();
       });
 
       // Listen to theme/locale changes from the main window

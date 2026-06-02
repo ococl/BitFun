@@ -1209,6 +1209,7 @@ pub async fn run() {
             api::external_app_api::register_external_app_tools_on_startup,
             api::external_app_api::poll_external_app_tool_call,
             api::external_app_api::submit_external_app_tool_result,
+            api::external_app_api::send_external_app_notification,
             // Browser API (embedded webview)
             api::browser_api::browser_webview_eval,
             api::browser_api::browser_get_url,
