@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use serde_json::{json, Value};
 use std::sync::OnceLock;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 const EXTERNAL_APP_WINDOW_PREFIX: &str = "external-app-";
 
@@ -136,12 +136,33 @@ impl ExternalAppHost for DesktopExternalAppHost {
         let _app = ExternalAppService::get_app(app_id)?;
 
         let queue = get_external_app_tool_call_queue();
-        let (call_id, rx) = queue.enqueue(app_id.to_string(), command.to_string(), params);
+        let (call_id, rx) = queue.enqueue(app_id.to_string(), command.to_string(), params.clone());
 
         debug!(
             "Enqueued external app command: call_id={}, app_id={}, command={}",
             call_id, app_id, command
         );
+
+        // Push event to the external app window so it can execute immediately
+        // (no polling needed). Fallback: window will poll once on load if it misses the event.
+        let app_handle = get_app_handle()?;
+        let label = Self::window_label(app_id);
+        if let Err(e) = app_handle.emit_to(
+            &label,
+            "bitfun:external-app-command",
+            json!({
+                "callId": call_id,
+                "command": command,
+                "params": params,
+            }),
+        ) {
+            warn!(
+                "Failed to emit external app command to window {}: {}. Command will rely on polling fallback.",
+                label, e
+            );
+        } else {
+            debug!("Pushed external app command event to window: label={}", label);
+        }
 
         // Wait for frontend to execute and return result (30s timeout)
         let timeout = tokio::time::Duration::from_secs(30);

@@ -631,3 +631,25 @@ pub fn submit_external_app_tool_result(payload: SubmitExternalAppToolResultPaylo
     )
     .map_err(|e| e.to_string())
 }
+
+#[derive(Debug, Deserialize)]
+pub struct SendExternalAppNotificationRequest {
+    pub app_id: String,
+    pub title: String,
+    pub body: Option<String>,
+}
+
+/// Send an OS-level desktop notification on behalf of an external app.
+#[tauri::command]
+pub async fn send_external_app_notification(
+    app: tauri::AppHandle,
+    request: SendExternalAppNotificationRequest,
+) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+
+    let mut builder = app.notification().builder().title(&request.title);
+    if let Some(body) = &request.body {
+        builder = builder.body(body);
+    }
+    builder.show().map_err(|e| e.to_string())
+}

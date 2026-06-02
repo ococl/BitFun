@@ -33,6 +33,11 @@ const selectedAiModel = ref('');
 const clipboardText = ref('Copied from BitFun Demo App');
 const clipboardResult = ref('');
 
+/* notification */
+const notifyTitle = ref('Demo Notification');
+const notifyBody = ref('Hello from BitFun Demo App!');
+const notifyResult = ref('');
+
 /* state report */
 const stateJson = ref('{"currentFilter":"all","itemCount":5,"lastAction":"init"}');
 const reportStateResult = ref('');
@@ -187,6 +192,11 @@ async function doClipboardWrite() {
 async function doClipboardRead() {
   const r = await wrap('clipboard.readText', () => bitfun.clipboard.readText());
   clipboardResult.value = String(r);
+}
+
+async function doSendNotification() {
+  await wrap('notification.send', () => bitfun.notification.send(notifyTitle.value, notifyBody.value));
+  notifyResult.value = 'Notification sent';
 }
 
 async function doRequestTheme() {
@@ -440,6 +450,15 @@ onUnmounted(() => {
           <button @click="doClipboardRead">Read</button>
         </div>
         <pre v-if="clipboardResult" class="result">{{ clipboardResult }}</pre>
+      </section>
+
+      <!-- Notification -->
+      <section class="panel">
+        <h2>Notification</h2>
+        <input v-model="notifyTitle" placeholder="title" />
+        <input v-model="notifyBody" placeholder="body (optional)" />
+        <button @click="doSendNotification">Send Notification</button>
+        <pre v-if="notifyResult" class="result">{{ notifyResult }}</pre>
       </section>
 
       <!-- Theme / Locale -->

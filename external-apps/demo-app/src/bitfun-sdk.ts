@@ -178,6 +178,11 @@ export const bitfun = {
     readText: (): Promise<unknown> => call('clipboard.readText'),
   },
 
+  notification: {
+    send: (title: string, body?: string): Promise<unknown> =>
+      call('notification.send', { title, body }),
+  },
+
   requestTheme: (): Promise<unknown> => call('bitfun/request-theme'),
   requestLocale: (): Promise<unknown> => call('bitfun/request-locale'),
 
