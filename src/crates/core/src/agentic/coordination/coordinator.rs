@@ -5893,6 +5893,7 @@ mod tests {
             Arc::new(TokioRwLock::new(ToolRegistry::new())),
             Arc::new(ToolStateManager::new(event_queue.clone())),
             None,
+            None,
         ));
         let execution_engine = Arc::new(ExecutionEngine::new(
             Arc::new(RoundExecutor::new(

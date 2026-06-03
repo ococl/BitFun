@@ -374,6 +374,7 @@ mod tests {
                 "ReviewPlatform",
                 "InitMiniApp",
                 "ControlExternalApp",
+                "ExternalAppManager",
                 "ControlHub",
                 "ComputerUse",
                 "Playbook",
