@@ -9,6 +9,7 @@ use crate::agentic::coordination::get_global_coordinator;
 use crate::agentic::deep_review::tool_context;
 use crate::agentic::session::EvidenceLedgerCheckpoint;
 use crate::agentic::tools::computer_use_host::ComputerUseHostRef;
+use crate::agentic::tools::external_app_host::ExternalAppHostRef;
 use crate::agentic::tools::framework::{
     build_tool_path_policy_denial_message, build_tool_runtime_artifact_reference,
     build_tool_session_runtime_artifact_reference, is_tool_path_allowed_by_resolved_roots,
@@ -54,6 +55,8 @@ pub struct ToolUseContext {
     pub custom_data: HashMap<String, Value>,
     /// Desktop automation (Computer use); only set in BitFun desktop.
     pub computer_use_host: Option<crate::agentic::tools::computer_use_host::ComputerUseHostRef>,
+    /// External app window lifecycle host; only set in BitFun desktop.
+    pub external_app_host: Option<ExternalAppHostRef>,
     pub runtime_tool_restrictions: ToolRuntimeRestrictions,
     /// Runtime handles such as workspace I/O services and cancellation.
     pub runtime_handles: ToolRuntimeHandles,
@@ -145,6 +148,7 @@ impl ToolUseContext {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: ToolRuntimeHandles::new(workspace_services, None),
         }
@@ -195,12 +199,14 @@ pub(crate) async fn call_tool_with_runtime_hooks<T: Tool + ?Sized>(
 pub(crate) fn build_tool_use_context_for_task(
     task: &ToolTask,
     computer_use_host: Option<ComputerUseHostRef>,
+    external_app_host: Option<ExternalAppHostRef>,
     cancellation_token: CancellationToken,
 ) -> ToolUseContext {
     build_tool_use_context_for_execution_context(
         &task.context,
         Some(task.tool_call.tool_id.clone()),
         computer_use_host,
+        external_app_host,
         cancellation_token,
     )
 }
@@ -209,6 +215,7 @@ pub(crate) fn build_tool_use_context_for_execution_context(
     context: &ToolExecutionContext,
     tool_call_id: Option<String>,
     computer_use_host: Option<ComputerUseHostRef>,
+    external_app_host: Option<ExternalAppHostRef>,
     cancellation_token: CancellationToken,
 ) -> ToolUseContext {
     ToolUseContext {
@@ -220,6 +227,7 @@ pub(crate) fn build_tool_use_context_for_execution_context(
         unlocked_collapsed_tools: context.unlocked_collapsed_tools.clone(),
         custom_data: build_tool_context_custom_data(context),
         computer_use_host,
+        external_app_host,
         runtime_handles: ToolRuntimeHandles::new(
             context.workspace_services.clone(),
             Some(cancellation_token),
@@ -253,6 +261,7 @@ pub(crate) fn build_tool_description_context(
         unlocked_collapsed_tools: Vec::new(),
         custom_data,
         computer_use_host: None,
+        external_app_host: None,
         runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
         runtime_handles: ToolRuntimeHandles::new(workspace_services.cloned(), None),
     }
@@ -702,6 +711,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -718,6 +728,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: vec!["WebFetch".to_string()],
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions {
                 allowed_tool_names: BTreeSet::from(["Read".to_string()]),
                 denied_tool_names: BTreeSet::from(["Bash".to_string()]),
@@ -762,6 +773,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: vec!["WebFetch".to_string(), "Git".to_string()],
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions {
                 allowed_tool_names: BTreeSet::from(["Read".to_string(), "GetToolSpec".to_string()]),
                 denied_tool_names: BTreeSet::from(["Bash".to_string()]),
@@ -823,6 +835,7 @@ mod context_facts_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };
@@ -874,6 +887,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -897,6 +911,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -922,6 +937,7 @@ mod path_resolution_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }
@@ -1127,6 +1143,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::new(
                 None,
@@ -1163,6 +1180,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data: HashMap::new(),
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };
@@ -1203,6 +1221,7 @@ mod call_runtime_tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: ToolRuntimeRestrictions::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         };
@@ -1264,13 +1283,16 @@ mod context_builder_tests {
 mod task_context_tests {
     use super::build_tool_use_context_for_task;
     use crate::agentic::core::ToolCall;
+    use crate::agentic::tools::external_app_host::{ExternalAppHost, ExternalAppHostRef};
     use crate::agentic::tools::pipeline::{
         SubagentParentInfo, ToolExecutionContext, ToolExecutionOptions, ToolTask,
     };
     use crate::agentic::tools::ToolRuntimeRestrictions;
+    use crate::util::errors::BitFunResult;
     use bitfun_runtime_ports::DelegationPolicy;
-    use serde_json::json;
+    use serde_json::{json, Value};
     use std::collections::{BTreeSet, HashMap};
+    use std::sync::Arc;
     use tokio_util::sync::CancellationToken;
 
     fn task_with_context_vars() -> ToolTask {
@@ -1333,12 +1355,53 @@ mod task_context_tests {
         )
     }
 
+    #[derive(Debug)]
+    struct TestExternalAppHost;
+
+    #[async_trait::async_trait]
+    impl ExternalAppHost for TestExternalAppHost {
+        async fn open_app(&self, _app_id: &str) -> BitFunResult<Value> {
+            Ok(json!({}))
+        }
+
+        async fn close_app(&self, _app_id: &str) -> BitFunResult<Value> {
+            Ok(json!({}))
+        }
+
+        async fn query_app_state(&self, _app_id: &str) -> BitFunResult<Value> {
+            Ok(json!({}))
+        }
+
+        async fn execute_command(
+            &self,
+            _app_id: &str,
+            _command: &str,
+            _params: Value,
+        ) -> BitFunResult<Value> {
+            Ok(json!({}))
+        }
+    }
+
+    fn test_external_app_host() -> ExternalAppHostRef {
+        Arc::new(TestExternalAppHost)
+    }
+
     #[test]
     fn tool_task_context_materialization_preserves_runtime_fields() {
         let task = task_with_context_vars();
+        let external_app_host = test_external_app_host();
 
-        let context = build_tool_use_context_for_task(&task, None, CancellationToken::new());
+        let context = build_tool_use_context_for_task(
+            &task,
+            None,
+            Some(external_app_host.clone()),
+            CancellationToken::new(),
+        );
 
+        assert!(context
+            .external_app_host
+            .as_ref()
+            .is_some_and(|host| Arc::ptr_eq(host, &external_app_host)));
         assert_eq!(context.tool_call_id.as_deref(), Some("tool_context_1"));
         assert_eq!(context.agent_type.as_deref(), Some("agent"));
         assert_eq!(context.session_id.as_deref(), Some("session_1"));

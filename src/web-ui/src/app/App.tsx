@@ -23,8 +23,12 @@ import {
   isStartupOverlayPresent,
 } from './startup/startupOverlay';
 import { ToolbarModeProvider } from '../flow_chat/components/toolbar-mode';
+import { initExternalAppWindowSync } from './scenes/externalapps/services/externalAppWindowSync';
 
 const log = createLogger('App');
+
+// Initialize global external-app window sync (theme/locale broadcast)
+initExternalAppWindowSync();
 
 function isBackgroundTaskCancelledError(error: unknown): boolean {
   return error instanceof Error && error.name === 'BackgroundTaskCancelledError';

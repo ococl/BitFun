@@ -39,6 +39,8 @@ impl CoworkMode {
                 "TerminalControl".to_string(),
                 "WebSearch".to_string(),
                 "ControlHub".to_string(),
+                "ExternalAppManager".to_string(),
+                "ControlExternalApp".to_string(),
             ],
         }
     }

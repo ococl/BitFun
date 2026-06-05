@@ -104,6 +104,42 @@ impl ToolRegistry {
         }
     }
 
+    /// Register external app tools (one tool per command).
+    pub fn register_external_app_tools(&mut self, app_id: &str, tools: Vec<ToolRef>) {
+        let tool_count = tools.len();
+        if tool_count == 0 {
+            return;
+        }
+        info!(
+            "Registering external app tools: app_id={}, count={}",
+            app_id, tool_count
+        );
+        for tool in tools {
+            let name = tool.name().to_string();
+            if self.get_tool(&name).is_some() {
+                warn!(
+                    "External app tool already exists, will overwrite: tool_name={}",
+                    name
+                );
+            }
+            self.register_tool(tool);
+        }
+        info!(
+            "External app tools registration completed: app_id={}, count={}",
+            app_id, tool_count
+        );
+    }
+
+    /// Remove all tools for a specific external app.
+    pub fn unregister_external_app_tools(&mut self, app_id: &str) {
+        let prefix = format!("external_app__{}__", app_id);
+        let removed_count = self.unregister_tools_by_prefix(&prefix);
+        info!(
+            "Unregistered external app tools: app_id={}, removed={}",
+            app_id, removed_count
+        );
+    }
+
     /// Remove all tools whose registry name starts with the given prefix.
     pub fn unregister_tools_by_prefix(&mut self, prefix: &str) -> usize {
         let removed_tool_names = self

@@ -15,6 +15,7 @@ pub enum ToolPackFeatureGroup {
     ComputerUse,
     ImageAnalysis,
     MiniApp,
+    ExternalApp,
     AgentControl,
 }
 
@@ -28,6 +29,7 @@ impl ToolPackFeatureGroup {
             Self::ComputerUse => "computer-use",
             Self::ImageAnalysis => "image-analysis",
             Self::MiniApp => "miniapp",
+            Self::ExternalApp => "external-app",
             Self::AgentControl => "agent-control",
         }
     }
@@ -41,6 +43,7 @@ pub const ALL_FEATURE_GROUPS: &[ToolPackFeatureGroup] = &[
     ToolPackFeatureGroup::ComputerUse,
     ToolPackFeatureGroup::ImageAnalysis,
     ToolPackFeatureGroup::MiniApp,
+    ToolPackFeatureGroup::ExternalApp,
     ToolPackFeatureGroup::AgentControl,
 ];
 
@@ -66,6 +69,10 @@ pub fn enabled_feature_groups() -> Vec<ToolPackFeatureGroup> {
             ToolPackFeatureGroup::ImageAnalysis,
         ),
         (cfg!(feature = "miniapp"), ToolPackFeatureGroup::MiniApp),
+        (
+            cfg!(feature = "external-app"),
+            ToolPackFeatureGroup::ExternalApp,
+        ),
         (
             cfg!(feature = "agent-control"),
             ToolPackFeatureGroup::AgentControl,
@@ -105,6 +112,7 @@ const CORE_INTEGRATION_FEATURE_GROUPS: &[ToolPackFeatureGroup] = &[
     ToolPackFeatureGroup::Mcp,
     ToolPackFeatureGroup::Git,
     ToolPackFeatureGroup::MiniApp,
+    ToolPackFeatureGroup::ExternalApp,
     ToolPackFeatureGroup::ComputerUse,
     ToolPackFeatureGroup::ImageAnalysis,
     ToolPackFeatureGroup::AgentControl,
@@ -161,6 +169,8 @@ const PRODUCT_TOOL_PROVIDER_GROUP_PLAN: &[ToolProviderGroupPlan] = &[
             "Git",
             "ReviewPlatform",
             "InitMiniApp",
+            "ControlExternalApp",
+            "ExternalAppManager",
             "ControlHub",
             "ComputerUse",
             "Playbook",
@@ -239,6 +249,7 @@ mod tests {
                 "computer-use",
                 "image-analysis",
                 "miniapp",
+                "external-app",
                 "agent-control"
             ]
         );
@@ -277,6 +288,10 @@ mod tests {
             cfg!(feature = "miniapp")
         );
         assert_eq!(
+            groups.contains(&ToolPackFeatureGroup::ExternalApp),
+            cfg!(feature = "external-app")
+        );
+        assert_eq!(
             groups.contains(&ToolPackFeatureGroup::AgentControl),
             cfg!(feature = "agent-control")
         );
@@ -291,6 +306,7 @@ mod tests {
         assert_eq!(ToolPackFeatureGroup::ComputerUse.id(), "computer-use");
         assert_eq!(ToolPackFeatureGroup::ImageAnalysis.id(), "image-analysis");
         assert_eq!(ToolPackFeatureGroup::MiniApp.id(), "miniapp");
+        assert_eq!(ToolPackFeatureGroup::ExternalApp.id(), "external-app");
         assert_eq!(ToolPackFeatureGroup::AgentControl.id(), "agent-control");
     }
 
@@ -357,6 +373,8 @@ mod tests {
                 "Git",
                 "ReviewPlatform",
                 "InitMiniApp",
+                "ControlExternalApp",
+                "ExternalAppManager",
                 "ControlHub",
                 "ComputerUse",
                 "Playbook",
@@ -393,6 +411,7 @@ mod tests {
                         "mcp",
                         "git",
                         "miniapp",
+                        "external-app",
                         "computer-use",
                         "image-analysis",
                         "agent-control",

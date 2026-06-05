@@ -83,6 +83,7 @@
       "terminal": "Shell",
       "git": "Git",
       "miniApps": "小應用",
+      "externalApps": "外部應用",
       "insights": "洞察"
     },
     "tooltips": {
@@ -897,6 +898,7 @@
     "agents": "智能體",
     "skills": "技能",
     "miniApps": "小應用",
+    "externalApps": "外部應用",
     "browser": "瀏覽器",
     "insights": "洞察",
     "assistant": "助理",

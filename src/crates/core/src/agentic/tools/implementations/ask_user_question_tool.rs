@@ -269,6 +269,7 @@ mod tests {
             unlocked_collapsed_tools: Vec::new(),
             custom_data,
             computer_use_host: None,
+            external_app_host: None,
             runtime_tool_restrictions: Default::default(),
             runtime_handles: bitfun_runtime_ports::ToolRuntimeHandles::default(),
         }

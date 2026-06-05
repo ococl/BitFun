@@ -28,11 +28,13 @@ const ProfileScene    = lazy(() => import('./profile/ProfileScene'));
 const AgentsScene       = lazy(() => import('./agents/AgentsScene'));
 const SkillsScene     = lazy(() => import('./skills/SkillsScene'));
 const MiniAppGalleryScene = lazy(() => import('./miniapps/MiniAppGalleryScene'));
+const ExternalAppGalleryScene = lazy(() => import('./externalapps/ExternalAppGalleryScene'));
 const BrowserScene    = lazy(() => import('./browser/BrowserScene'));
 const InsightsScene   = lazy(() => import('./my-agent/InsightsScene'));
 const ShellScene      = lazy(() => import('./shell/ShellScene'));
 const WelcomeScene    = lazy(() => import('./welcome/WelcomeScene'));
 const MiniAppScene    = lazy(() => import('./miniapps/MiniAppScene'));
+const ExternalAppScene = lazy(() => import('./externalapps/ExternalAppScene'));
 const PanelViewScene  = lazy(() => import('./panel-view/PanelViewScene'));
 
 
@@ -122,6 +124,8 @@ function renderScene(
       return <SkillsScene />;
     case 'miniapps':
       return <MiniAppGalleryScene />;
+    case 'externalapps':
+      return <ExternalAppGalleryScene />;
     case 'browser':
       return <BrowserScene />;
     case 'assistant':
@@ -135,6 +139,9 @@ function renderScene(
     default:
       if (typeof id === 'string' && id.startsWith('miniapp:')) {
         return <MiniAppScene appId={id.slice('miniapp:'.length)} />;
+      }
+      if (typeof id === 'string' && id.startsWith('externalapp:')) {
+        return <ExternalAppScene appId={id.slice('externalapp:'.length)} />;
       }
       return null;
   }

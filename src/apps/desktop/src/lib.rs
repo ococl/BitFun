@@ -4,6 +4,7 @@
 pub mod api;
 pub mod computer_use;
 pub mod crash_diagnostics;
+pub mod external_app_host;
 pub mod logging;
 pub mod macos_menubar;
 pub mod startup_trace;
@@ -12,6 +13,7 @@ pub mod tray;
 
 use bitfun_core::agentic::tools::computer_use_capability::set_computer_use_desktop_available;
 use bitfun_core::agentic::tools::computer_use_host::ComputerUseHostRef;
+use bitfun_core::agentic::tools::external_app_host::ExternalAppHostRef;
 use bitfun_core::infrastructure::ai::AIClientFactory;
 use bitfun_core::infrastructure::{get_path_manager_arc, try_get_path_manager_arc};
 use bitfun_core::service::search::get_global_workspace_search_service;
@@ -537,6 +539,7 @@ pub async fn run() {
             }
 
             let app_handle = app.handle().clone();
+            external_app_host::set_app_handle(app_handle.clone());
             let window_started = Instant::now();
             startup_trace.record_phase("main_window_create_start", "native_window");
             theme::create_main_window(&app_handle, &startup_trace_id, &startup_trace);
@@ -646,6 +649,15 @@ pub async fn run() {
             let step_started = Instant::now();
             init_mcp_servers(app_handle.clone());
             startup_trace.record_elapsed_step("native_setup", "init_mcp_servers", step_started);
+
+            // Register external app tools on startup
+            let step_started = Instant::now();
+            tokio::spawn(async move {
+                if let Err(e) = api::external_app_api::register_external_app_tools_on_startup().await {
+                    log::warn!("Failed to register external app tools on startup: {}", e);
+                }
+            });
+            startup_trace.record_elapsed_step("native_setup", "register_external_app_tools", step_started);
             let step_started = Instant::now();
             init_acp_clients(app_handle.clone());
             startup_trace.record_elapsed_step("native_setup", "init_acp_clients", step_started);
@@ -1180,6 +1192,25 @@ pub async fn run() {
             api::miniapp_api::miniapp_ai_chat,
             api::miniapp_api::miniapp_ai_cancel,
             api::miniapp_api::miniapp_ai_list_models,
+            // ExternalApp API
+            api::external_app_api::list_external_apps,
+            api::external_app_api::get_external_app,
+            api::external_app_api::create_external_app,
+            api::external_app_api::update_external_app,
+            api::external_app_api::delete_external_app,
+            api::external_app_api::get_external_app_storage,
+            api::external_app_api::set_external_app_storage,
+            api::external_app_api::clear_external_app_storage_cmd,
+            api::external_app_api::get_external_app_grants,
+            api::external_app_api::set_external_app_grants,
+            api::external_app_api::external_app_ai_complete,
+            api::external_app_api::external_app_ai_chat,
+            api::external_app_api::external_app_ai_cancel,
+            api::external_app_api::external_app_ai_list_models,
+            api::external_app_api::register_external_app_tools_on_startup,
+            api::external_app_api::poll_external_app_tool_call,
+            api::external_app_api::submit_external_app_tool_result,
+            api::external_app_api::send_external_app_notification,
             // Browser API (embedded webview)
             api::browser_api::browser_webview_eval,
             api::browser_api::browser_get_url,
@@ -1298,10 +1329,14 @@ async fn init_agentic_system() -> anyhow::Result<(
         Arc::new(computer_use::DesktopComputerUseHost::new());
     set_computer_use_desktop_available(true);
 
+    let external_app_host: ExternalAppHostRef =
+        Arc::new(external_app_host::DesktopExternalAppHost::new());
+
     let tool_pipeline = Arc::new(tools::pipeline::ToolPipeline::new(
         tool_registry,
         tool_state_manager,
         Some(computer_use_host),
+        Some(external_app_host),
     ));
 
     let stream_processor = Arc::new(execution::StreamProcessor::new(event_queue.clone()));

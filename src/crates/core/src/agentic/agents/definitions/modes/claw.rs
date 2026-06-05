@@ -36,6 +36,8 @@ impl ClawMode {
                 // Local desktop/system control is delegated to the ComputerUse
                 // agent/tool instead of being surfaced as a ControlHub domain.
                 "ControlHub".to_string(),
+                "ExternalAppManager".to_string(),
+                "ControlExternalApp".to_string(),
             ],
         }
     }

@@ -1,4 +1,4 @@
-use super::support::merge_dynamic_mcp_tools;
+use super::support::merge_dynamic_tools;
 use super::AgentRegistry;
 use crate::agentic::agents::definitions::custom::{CustomSubagent, CustomSubagentKind};
 use crate::agentic::agents::registry::builtin::default_model_id_for_builtin_agent;
@@ -249,16 +249,17 @@ async fn task_visible_subagents_are_filtered_by_parent_agent() {
 }
 
 #[test]
-fn merge_dynamic_mcp_tools_appends_registered_mcp_tools_once() {
+fn merge_dynamic_tools_appends_registered_mcp_and_external_app_tools_once() {
     let configured_tools = vec!["Read".to_string(), "Bash".to_string()];
     let registered_tool_names = vec![
         "Read".to_string(),
         "mcp__notion__notion-search".to_string(),
         "mcp__github__list_issues".to_string(),
         "mcp__notion__notion-search".to_string(),
+        "external_app__demo__setFilter".to_string(),
     ];
 
-    let merged = merge_dynamic_mcp_tools(configured_tools, &registered_tool_names);
+    let merged = merge_dynamic_tools(configured_tools, &registered_tool_names);
 
     assert_eq!(
         merged,
@@ -267,6 +268,7 @@ fn merge_dynamic_mcp_tools_appends_registered_mcp_tools_once() {
             "Bash".to_string(),
             "mcp__notion__notion-search".to_string(),
             "mcp__github__list_issues".to_string(),
+            "external_app__demo__setFilter".to_string(),
         ]
     );
 }

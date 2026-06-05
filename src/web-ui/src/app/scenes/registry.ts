@@ -162,6 +162,15 @@ export const SCENE_TAB_REGISTRY: SceneTabDef[] = [
     singleton: true,
     defaultOpen: false,
   },
+  {
+    id: 'externalapps' as SceneTabId,
+    label: 'External Apps',
+    labelKey: 'scenes.externalApps',
+    Icon: Globe,
+    pinned: false,
+    singleton: true,
+    defaultOpen: false,
+  },
 ];
 
 export function getSceneDef(id: SceneTabId): SceneTabDef | undefined {
@@ -178,6 +187,21 @@ export function getMiniAppSceneDef(appId: string, appName?: string): SceneTabDef
     id,
     label: appName ?? appId,
     Icon: Puzzle,
+    pinned: false,
+    fixed: false,
+    closable: true,
+    singleton: false,
+    defaultOpen: false,
+  };
+}
+
+/** Dynamic scene def for an ExternalApp tab (used by SceneBar and useSceneManager). */
+export function getExternalAppSceneDef(appId: string, appName?: string): SceneTabDef {
+  const id: SceneTabId = `externalapp:${appId}`;
+  return {
+    id,
+    label: appName ?? appId,
+    Icon: Globe,
     pinned: false,
     fixed: false,
     closable: true,
